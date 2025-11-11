@@ -346,26 +346,9 @@ try {
                     <input type="hidden" name="classificar" id="hidden-classificar" value="<?php echo htmlspecialchars($classificacao); ?>">
 
                     <div class="filter-group">
-                        <h3>Preço</h3>
-                        <ul>
-                            <?php foreach ($faixas_preco as $range => $label): ?>
-                            <li>
-                                <label>
-                                    <input type="radio" name="preco" value="<?php echo $range; ?>"
-                                        <?php if ($preco_selecionado == $range) echo 'checked'; ?>>
-                                    <?php echo $label; ?>
-                                </label>
-                            </li>
-                            <?php endforeach; ?>
-                            <?php if (!empty($preco_selecionado)): ?>
-                            <li>
-                                <label>
-                                    <input type="radio" name="preco" value="">
-                                    Ver todos os preços
-                                </label>
-                            </li>
-                            <?php endif; ?>
-                        </ul>
+                        
+                            
+            
                     </div>
 
                     <?php if (!empty($marcas_disponiveis)): ?>
