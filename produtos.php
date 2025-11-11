@@ -35,17 +35,6 @@ $marcas_selecionadas = $_GET['marcas'] ?? [];
 $preco_selecionado = $_GET['preco'] ?? '';
 $classificacao = $_GET['classificar'] ?? 'lancamento';
 
-// --- 3. DEFINIR FAIXAS DE PREÇO ESTÁTICAS ---
-$faixas_preco = [
-    "0-174.79" => "Até R$ 174,79",
-    "174.80-348.79" => "De R$ 174,80 a R$ 348,79",
-    "348.80-522.79" => "De R$ 348,80 a R$ 522,79",
-    "522.80-696.79" => "De R$ 522,80 a R$ 696,79",
-    "696.80-870.79" => "De R$ 696,80 a R$ 870,79",
-    "870.80-1047.60" => "De R$ 870,80 a R$ 1.047,60",
-    "1047.61-999999" => "Acima de R$ 1.047,60"
-];
-
 
 // --- 4. BUSCAR MARCAS DISPONÍVEIS *NESTA CATEGORIA* (para o filtro) ---
 $marcas_disponiveis = [];
