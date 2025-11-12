@@ -43,7 +43,6 @@ try {
         LEFT JOIN marcas m ON p.marca_id = m.id
         WHERE p.id = :id AND p.ativo = true
     ");
-    
     $stmt_prod->execute(['id' => $produto_id]);
     $produto = $stmt_prod->fetch(PDO::FETCH_ASSOC);
 
@@ -51,10 +50,6 @@ try {
           $errors['db'] = "Produto não encontrado ou indisponível.";
           $page_alert_message = $errors['db'];
     } else {
-        // ✅ Buscar tamanhos disponíveis do produto (agora com o produto já carregado)
-    $stmt_tam = $pdo->prepare("SELECT tamanho FROM produto_tamanhos WHERE produto_id = :pid ORDER BY tamanho ASC");
-    $stmt_tam->execute(['pid' => $produto['id']]);
-    $tamanhos = $stmt_tam->fetchAll(PDO::FETCH_COLUMN);
         // --- LÓGICA DE DISPONIBILIDADE ---
         $is_disponivel = ($produto['ativo'] && $produto['estoque'] > 0);
 
@@ -770,30 +765,14 @@ try {
                     <?php if ($is_disponivel): ?>
                         <p class="price">R$ <?php echo number_format($produto['preco'], 2, ',', '.'); ?></p>
 
-                       <form id="add-to-cart-form" onsubmit="return false;">
-    <input type="hidden" id="produto-id" value="<?php echo $produto_id; ?>">
-    <input type="hidden" id="tamanho-escolhido" name="tamanho">
-
-    <?php if (!empty($tamanhos)): ?>
-        <div class="tamanhos">
-            <h4>Tamanhos disponíveis:</h4>
-            <div class="botoes-tamanhos">
-                <?php foreach ($tamanhos as $t): ?>
-                    <button type="button" class="btn-tamanho"><?= htmlspecialchars($t) ?></button>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    <?php endif; ?>
-
-    <div class="quantity-selector">
-        <label for="quantity">Quantidade:</label>
-        <input type="number" id="quantity" name="quantity" value="1" min="1" max="<?php echo $produto['estoque']; ?>">
-    </div>
-
-    <button type="button" class="btn-comprar" id="btn-comprar">Comprar</button>
-</form>
-
-
+                        <form id="add-to-cart-form" onsubmit="return false;">
+                            <input type="hidden" id="produto-id" value="<?php echo $produto_id; ?>">
+                            <div class="quantity-selector">
+                                <label for="quantity">Quantidade:</label>
+                                <input type="number" id="quantity" name="quantity" value="1" min="1" max="<?php echo $produto['estoque']; ?>">
+                            </div>
+                            <button type="button" class="btn-comprar" id="btn-comprar">Comprar</button>
+                        </form>
 
                         <?php if ($exibir_calculador_frete): ?>
                             <div class="shipping-calculator">
@@ -1216,45 +1195,6 @@ try {
                     infoModal.classList.add('modal-open');
                  }
             <?php endif; ?>
-            <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const botoesTamanho = document.querySelectorAll('.btn-tamanho');
-    const inputTamanho = document.getElementById('tamanho-escolhido');
-    const botaoComprar = document.getElementById('btn-comprar');
-
-    // Quando o cliente clicar num tamanho
-    botoesTamanho.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Remove destaque dos outros botões
-            botoesTamanho.forEach(b => b.classList.remove('ativo'));
-            // Marca o botão clicado
-            btn.classList.add('ativo');
-            // Guarda o valor no campo oculto
-            inputTamanho.value = btn.textContent.trim();
-        });
-    });
-
-    // Quando clicar em "Comprar"
-    botaoComprar.addEventListener('click', () => {
-        if (!inputTamanho.value) {
-            alert("Por favor, selecione um tamanho antes de comprar!");
-            return;
-        }
-
-        alert("Tamanho selecionado: " + inputTamanho.value);
-        // Aqui depois você pode adicionar a lógica de enviar ao carrinho
-    });
-
-
-    // ⚙️ Seu código existente do modal continua abaixo
-    <?php if (isset($errors['db']) && !empty($page_alert_message)): ?>
-         const infoModal = document.getElementById('info-modal');
-         const infoModalMessage = document.getElementById('info-modal-message');
-         if (infoModal && infoModalMessage) {
-            infoModalMessage.innerHTML = <?php echo json_encode($page_alert_message); ?>;
-            infoModal.classList.add('modal-open');
-         }
-    <?php endif; ?>
 
         }); // Fim do DOMContentLoaded
     </script>
