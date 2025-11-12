@@ -43,6 +43,12 @@ try {
         LEFT JOIN marcas m ON p.marca_id = m.id
         WHERE p.id = :id AND p.ativo = true
     ");
+    // Buscar tamanhos disponíveis do produto
+$stmt_tam = $pdo->prepare("SELECT tamanho FROM produto_tamanhos WHERE produto_id = :pid ORDER BY tamanho ASC");
+$stmt_tam->execute(['pid' => $produto['id']]);
+$tamanhos = $stmt_tam->fetchAll(PDO::FETCH_COLUMN);
+
+
     $stmt_prod->execute(['id' => $produto_id]);
     $produto = $stmt_prod->fetch(PDO::FETCH_ASSOC);
 
@@ -773,6 +779,17 @@ try {
                             </div>
                             <button type="button" class="btn-comprar" id="btn-comprar">Comprar</button>
                         </form>
+                        <?php if (!empty($tamanhos)): ?>
+    <div class="tamanhos">
+        <h4>Tamanhos disponíveis:</h4>
+        <div class="botoes-tamanhos">
+            <?php foreach ($tamanhos as $t): ?>
+                <button type="button" class="btn-tamanho"><?= htmlspecialchars($t) ?></button>
+            <?php endforeach; ?>
+        </div>
+    </div>
+<?php endif; ?>
+
 
                         <?php if ($exibir_calculador_frete): ?>
                             <div class="shipping-calculator">
