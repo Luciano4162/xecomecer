@@ -1114,7 +1114,65 @@ try {
                     videoPlayButton.style.display = 'none';
                 });
             }
+<?php
+// --- SELETOR DE TAMANHO --- //
+$categoria = strtolower($produto['categoria'] ?? '');
 
+$categorias_roupas = ['roupa', 'camisa', 'calça', 'bermuda', 'jaqueta', 'blusa'];
+$categorias_calcados = ['tenis', 'sapato', 'sandalia', 'bota'];
+
+if (in_array($categoria, $categorias_roupas)) {
+    $tamanhos = ['P', 'M', 'G', 'GG', 'EXG'];
+} elseif (in_array($categoria, $categorias_calcados)) {
+    $tamanhos = ['36', '37', '38', '39', '40', '41', '42', '43'];
+} else {
+    $tamanhos = [];
+}
+?>
+
+<?php if (!empty($tamanhos)): ?>
+  <h4>Selecione o tamanho:</h4>
+  <div class="tamanhos">
+    <?php foreach ($tamanhos as $t): ?>
+      <button type="button" class="tamanho-btn" onclick="selecionarTamanho(this)"><?= $t ?></button>
+    <?php endforeach; ?>
+  </div>
+  <input type="hidden" id="tamanhoSelecionado" value="">
+<?php endif; ?>
+<script>
+function selecionarTamanho(botao) {
+  // tira o destaque dos outros botões
+  document.querySelectorAll('.tamanho-btn').forEach(btn => btn.classList.remove('ativo'));
+
+  // deixa o botão clicado azul
+  botao.classList.add('ativo');
+
+  // grava o tamanho escolhido dentro do input escondido
+  document.getElementById('tamanhoSelecionado').value = botao.textContent.trim();
+}
+</script>
+
+<style>
+.tamanho-btn {
+  padding: 8px 14px;
+  border: 1px solid #007bff; /* azul magalu */
+  background: white;
+  color: #007bff;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tamanho-btn:hover {
+  background: #007bff;
+  color: white;
+}
+
+.tamanho-btn.ativo {
+  background: #007bff;
+  color: white;
+}
+</style>
             // --- LISTENER DO BOTÃO COMPRAR (Específico desta página) ---
             const btnComprar = document.getElementById('btn-comprar');
             if (btnComprar) {
