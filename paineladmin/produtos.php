@@ -10,7 +10,18 @@ require_once '../config/db.php'; // Conexão com o DB
 
 $message = '';
 $message_type = '';
-
+// 🔧 Cria tabela de tamanhos se não existir
+try {
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS produto_tamanhos (
+            id SERIAL PRIMARY KEY,
+            produto_id INTEGER REFERENCES produtos(id) ON DELETE CASCADE,
+            tamanho VARCHAR(10) NOT NULL
+        );
+    ");
+} catch (PDOException $e) {
+    echo 'Erro ao criar tabela de tamanhos: ' . $e->getMessage();
+}
 // --- INICIALIZAÇÃO DE VARIÁVEIS ---
 $edit_produto = null;
 $is_editing_produto = false;
@@ -161,19 +172,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['salvar_produto'])) {
             $stmt->bindParam(':mais_vendido', $mais_vendido, PDO::PARAM_BOOL);
             $stmt->bindParam(':is_lancamento', $is_lancamento, PDO::PARAM_BOOL); // <-- NOVO
             $stmt->execute();
+if ($id) {
+    $message = "Produto atualizado com sucesso!";
+    $produto_id_redirect = $id;
+} else {
+    $produto_id_redirect = $pdo->lastInsertId();
+    $message = "Produto adicionado com sucesso! Adicione mídias e associe categorias.";
+}
+$message_type = "success";
 
-            if ($id) {
-                $message = "Produto atualizado com sucesso!";
-                $produto_id_redirect = $id;
-            } else {
-                $produto_id_redirect = $pdo->lastInsertId();
-                $message = "Produto adicionado com sucesso! Adicione mídias e associe categorias.";
-            }
-            $message_type = "success";
-            $_SESSION['flash_message'] = $message;
-            $_SESSION['flash_type'] = $message_type;
-            header("Location: produtos.php?edit_produto=" . $produto_id_redirect . "#tab-produtos"); // Redireciona para a aba de produtos (edição)
-            exit;
+// --- SALVAR TAMANHOS ---
+if (isset($_POST['tamanhos']) && is_array($_POST['tamanhos'])) {
+    // Remove tamanhos antigos
+    $pdo->prepare("DELETE FROM produto_tamanhos WHERE produto_id = :pid")
+        ->execute(['pid' => $produto_id_redirect]);
+
+    // Insere novos tamanhos
+    $stmt_tam = $pdo->prepare("
+        INSERT INTO produto_tamanhos (produto_id, tamanho)
+        VALUES (:pid, :tamanho)
+    ");
+    foreach ($_POST['tamanhos'] as $tamanho) {
+        if (!empty(trim($tamanho))) {
+            $stmt_tam->execute([
+                'pid' => $produto_id_redirect,
+                'tamanho' => strtoupper(trim($tamanho))
+            ]);
+        }
+    }
+}
+
+$_SESSION['flash_message'] = $message;
+$_SESSION['flash_type'] = $message_type;
+header("Location: produtos.php?edit_produto=" . $produto_id_redirect . "#tab-produtos");
+exit;
 
         } catch (PDOException $e) {
             $message = "Erro ao salvar produto: " . $e->getMessage();
@@ -208,8 +240,7 @@ if (isset($_GET['delete_produto'])) {
     }
     $_SESSION['flash_message'] = $message;
     $_SESSION['flash_type'] = $message_type;
-    header("Location: produtos.php#tab-lista"); exit;
-}
+    header("Location: produtos.php#tab-lista"); exit;}
 
 // ==========================================================
 // LÓGICA DE LEITURA (PARA PREENCHER PÁGINA)
@@ -536,6 +567,45 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                    <label for="is_lancamento">Lançamento (Tag "Lançamento!")</label>
                                 </div>
                             </div>
+                            <!-- CAMPO DE TAMANHOS -->
+<div class="form-group">
+    <label for="tamanhos">Tamanhos disponíveis:</label>
+    <div id="tamanhos-container">
+        <?php
+        // Exibe tamanhos já cadastrados se estiver editando um produto
+        if (isset($edit_produto['id'])) {
+            $stmt_tam = $pdo->prepare("SELECT tamanho FROM produto_tamanhos WHERE produto_id = ?");
+            $stmt_tam->execute([$edit_produto['id']]);
+            $tamanhos_existentes = $stmt_tam->fetchAll(PDO::FETCH_COLUMN);
+        } else {
+            $tamanhos_existentes = [];
+        }
+
+        if (!empty($tamanhos_existentes)) {
+            foreach ($tamanhos_existentes as $t) {
+                echo '<input type="text" name="tamanhos[]" value="' . htmlspecialchars($t) . '" class="form-control mb-2">';
+            }
+        } else {
+            echo '<input type="text" name="tamanhos[]" placeholder="Ex: P, M, G" class="form-control mb-2">';
+        }
+        ?>
+    </div>
+
+    <button type="button" class="btn btn-sm btn-secondary" onclick="addTamanho()">+ Adicionar tamanho</button>
+</div>
+
+<script>
+function addTamanho() {
+    const container = document.getElementById('tamanhos-container');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.name = 'tamanhos[]';
+    input.placeholder = 'Ex: GG, 42, 44...';
+    input.className = 'form-control mb-2';
+    container.appendChild(input);
+}
+</script>
+
 
                             <button type="submit" name="salvar_produto" class="<?php echo $is_editing_produto ? 'update' : ''; ?>" style="margin-top: 1.5rem;">
                                 <?php echo $is_editing_produto ? 'Salvar Alterações' : 'Adicionar Produto (e ir para Mídia)'; ?>
