@@ -73,72 +73,72 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_avaliacao'])) {
 
     if (empty($errors)) {
         try {
-            // 2. Verificar se o usuário realmente comprou este item neste pedido (Segurança)
-            $stmt_check = $pdo->prepare("
-                SELECT COUNT(*)
-                FROM pedidos_itens pi
-                JOIN pedidos p ON pi.pedido_id = p.id
-                WHERE p.id = :pedido_id
-                  AND p.usuario_id = :user_id
-                  AND pi.produto_id = :produto_id
-            ");
-            $stmt_check->execute([
-                ':pedido_id' => $pedido_id,
-                ':user_id' => $user_id,
-                ':produto_id' => $produto_id_avaliado
+    // 2. Verificar se o usuário realmente comprou este item neste pedido (Segurança)
+    $stmt_check = $pdo->prepare("
+        SELECT COUNT(*)
+        FROM pedidos_itens pi
+        JOIN pedidos p ON pi.pedido_id = p.id
+        WHERE p.id = :pedido_id
+          AND p.usuario_id = :user_id
+          AND pi.produto_id = :produto_id
+    ");
+    $stmt_check->execute([
+        ':pedido_id' => $pedido_id,
+        ':user_id' => $user_id,
+        ':produto_id' => $produto_id_avaliado
+    ]);
+
+    if ($stmt_check->fetchColumn() > 0) {
+        // 3. Verificar se já existe uma avaliação (UPDATE) ou se é nova (INSERT)
+        $stmt_find = $pdo->prepare("SELECT id FROM avaliacoes_produto WHERE usuario_id = :uid AND produto_id = :pid LIMIT 1");
+        $stmt_find->execute(['uid' => $user_id, 'pid' => $produto_id_avaliado]);
+        $existing_id = $stmt_find->fetchColumn();
+
+        if ($existing_id) {
+            // UPDATE
+            $sql = "UPDATE avaliacoes_produto SET
+                        classificacao = :class,
+                        comentario = :coment,
+                        foto_url = :foto,
+                        data_avaliacao = NOW(),
+                        aprovado = TRUE
+                    WHERE id = :id AND usuario_id = :uid";
+            $stmt_save = $pdo->prepare($sql);
+            $stmt_save->execute([
+                ':class' => $classificacao,
+                ':coment' => $comentario,
+                ':foto' => $foto_url_final,
+                ':id' => $existing_id,
+                ':uid' => $user_id
             ]);
+        } else {
+            // INSERT
+            $sql = "INSERT INTO avaliacoes_produto
+                        (produto_id, usuario_id, nome_avaliador, classificacao, comentario, foto_url, aprovado, data_avaliacao)
+                    VALUES
+                        (:pid, :uid, :nome, :class, :coment, :foto, TRUE, NOW())";
+            $stmt_save = $pdo->prepare($sql);
+            $stmt_save->execute([
+                ':pid' => $produto_id_avaliado,
+                ':uid' => $user_id,
+                ':nome' => $user_nome, // Nome do usuário logado
+                ':class' => $classificacao,
+                ':coment' => $comentario,
+                ':foto' => $foto_url_final
+            ]);
+        }
 
-            if ($stmt_check->fetchColumn() > 0) {
-                // 3. Verificar se já existe uma avaliação (UPDATE) ou se é nova (INSERT)
-                $stmt_find = $pdo->prepare("SELECT id FROM avaliacoes_produto WHERE usuario_id = :uid AND produto_id = :pid LIMIT 1");
-                $stmt_find->execute(['uid' => $user_id, 'pid' => $produto_id_avaliado]);
-                $existing_id = $stmt_find->fetchColumn();
-
-                if ($existing_id) {
-                    // UPDATE
-                    $sql = "UPDATE avaliacoes_produto SET
-                                classificacao = :class,
-                                comentario = :coment,
-                                foto_url = :foto,
-                                data_avaliacao = NOW(),
-                                aprovado = TRUE -- Aprovado automaticamente
-                            WHERE id = :id AND usuario_id = :uid";
-                    $stmt_save = $pdo->prepare($sql);
-                    $stmt_save->execute([
-                        ':class' => $classificacao,
-                        ':coment' => $comentario,
-                        ':foto' => $foto_url_final,
-                        ':id' => $existing_id,
-                        ':uid' => $user_id
-                    ]);
-                } else {
-                    // INSERT
-                    $sql = "INSERT INTO avaliacoes_produto
-                                (produto_id, usuario_id, nome_avaliador, classificacao, comentario, foto_url, aprovado, data_avaliacao)
-                            VALUES
-                                (:pid, :uid, :nome, :class, :coment, :foto, TRUE, NOW())";
-                    $stmt_save = $pdo->prepare($sql);
-                    $stmt_save->execute([
-                        ':pid' => $produto_id_avaliado,
-                        ':uid' => $user_id,
-                        ':nome' => $user_nome, // Nome do usuário logado
-                        ':class' => $classificacao,
-                        ':coment' => $comentario,
-                        ':foto' => $foto_url_final
-                    ]);
-                }
-             
-      if ($avaliacao_valida) {
+        if ($avaliacao_valida) {
             $flash_message = "Avaliação enviada com sucesso!";
         } else {
             $errors['auth'] = "Erro: Você não pode avaliar um produto que não";
         }
-    } // Fecha o bloco do try antes do catch
+    } // fecha o if ($stmt_check->fetchColumn() > 0)
+} // ✅ agora sim fecha o try corretamente
 
-    catch (PDOException $e) {
-        $errors['db_save'] = "Erro ao salvar avaliação: " .
-         $e->getMessage();
-    }
+catch (PDOException $e) {
+    $errors['db_save'] = "Erro ao salvar avaliação: " . $e->getMessage();
+}
 // ==========================================================
 // LÓGICA DE BUSCA (GET)
 // ==========================================================
