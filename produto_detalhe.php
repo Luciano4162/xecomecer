@@ -23,7 +23,19 @@ $errors = [];
 $page_alert_message = '';
 $exibir_calculador_frete = false; // Padrão
 
-try {
+[14:17, 13/11/2025] Advogado: // --- Identificar tipo de produto (roupa, calçado, etc.) ---
+$tipo_produto = 'outro';
+
+if ($bc_categoria) {
+    $nome_cat = strtolower($bc_categoria['nome']);
+
+    if (strpos($nome_cat, 'tênis') !== false || strpos($nome_cat, 'sapato') !== false || strpos($nome_cat, 'sandália') !== false) {
+        $tipo_produto = 'calcado';
+    } elseif (strpos($nome_cat, 'camisa') !== false || strpos($nome_cat, 'bermuda') !== false || strpos($nome_cat, 'calça') !== false || strpos($nome_cat, 'short') !== false) {
+        $tipo_produto = 'roupa';
+    }
+}
+[14:22, 13/11/2025] Advogado: try {
     // --- Query para verificar a lista de desejos ---
     if ($user_id) {
         $stmt_wishlist = $pdo->prepare("SELECT COUNT(*) FROM lista_desejos WHERE usuario_id = ? AND produto_id = ?");
@@ -76,6 +88,18 @@ try {
         ");
         $stmt_bc->execute(['pid' => $produto_id]);
         $bc_categoria = $stmt_bc->fetch(PDO::FETCH_ASSOC);
+        // --- Identificar tipo de produto (roupa, calçado, etc.) ---
+$tipo_produto = 'outro';
+
+if ($bc_categoria) {
+    $nome_cat = strtolower($bc_categoria['nome']);
+
+    if (strpos($nome_cat, 'tênis') !== false || strpos($nome_cat, 'sapato') !== false || strpos($nome_cat, 'sandália') !== false) {
+        $tipo_produto = 'calcado';
+    } elseif (strpos($nome_cat, 'camisa') !== false || strpos($nome_cat, 'bermuda') !== false || strpos($nome_cat, 'calça') !== false || strpos($nome_cat, 'short') !== false) {
+        $tipo_produto = 'roupa';
+    }
+}
 
         if ($bc_categoria && $bc_categoria['parent_id']) {
             $stmt_parent = $pdo->prepare("SELECT id, nome FROM categorias WHERE id = :pid");
@@ -129,6 +153,7 @@ try {
     error_log("Erro no produto_detalhe: " . $e->getMessage());
     $errors['db'] = "Erro ao carregar informações do produto.";
 }
+ 
 
 // Helper para converter URL Vimeo
 function getVimeoEmbedUrl($url) {
@@ -778,40 +803,29 @@ try {
                         <form id="add-to-cart-form" onsubmit="return false;">
     <input type="hidden" id="produto-id" value="<?php echo $produto_id; ?>">
 
-    <!-- Botões de tamanho -->
-    <div class="tamanhos-opcoes">
-        <input type="radio" id="tamanhoP" name="tamanho" value="P">
-        <label for="tamanhoP">P</label>
+    <!-- Tamanhos de Roupa -->
+    <div class="tamanho-selector">
+        <label>Selecione o tamanho de roupa:</label>
+        <div class="tamanhos-opcoes">
+            <label><input type="radio" name="tamanho" value="P"> P</label>
+            <label><input type="radio" name="tamanho" value="M"> M</label>
+            <label><input type="radio" name="tamanho" value="G"> G</label>
+            <label><input type="radio" name="tamanho" value="GG"> GG</label>
+        </div>
+    </div>
 
-        <input type="radio" id="tamanhoM" name="tamanho" value="M">
-        <label for="tamanhoM">M</label>
-
-        <input type="radio" id="tamanhoG" name="tamanho" value="G">
-        <label for="tamanhoG">G</label>
-
-        <input type="radio" id="tamanhoGG" name="tamanho" value="GG">
-        <label for="tamanhoGG">GG</label>
-
-        <input type="radio" id="tamanho37" name="tamanho" value="37">
-        <label for="tamanho37">37</label>
-
-        <input type="radio" id="tamanho38" name="tamanho" value="38">
-        <label for="tamanho38">38</label>
-
-        <input type="radio" id="tamanho39" name="tamanho" value="39">
-        <label for="tamanho39">39</label>
-
-        <input type="radio" id="tamanho40" name="tamanho" value="40">
-        <label for="tamanho40">40</label>
-
-        <input type="radio" id="tamanho41" name="tamanho" value="41">
-        <label for="tamanho41">41</label>
-
-        <input type="radio" id="tamanho42" name="tamanho" value="42">
-        <label for="tamanho42">42</label>
-
-        <input type="radio" id="tamanho43" name="tamanho" value="43">
-        <label for="tamanho43">43</label>
+    <!-- Tamanhos de Calçado -->
+    <div class="tamanho-selector">
+        <label>Selecione o tamanho do calçado:</label>
+        <div class="tamanhos-opcoes">
+            <label><input type="radio" name="tamanho" value="37"> 37</label>
+            <label><input type="radio" name="tamanho" value="38"> 38</label>
+            <label><input type="radio" name="tamanho" value="39"> 39</label>
+            <label><input type="radio" name="tamanho" value="40"> 40</label>
+            <label><input type="radio" name="tamanho" value="41"> 41</label>
+            <label><input type="radio" name="tamanho" value="42"> 42</label>
+            <label><input type="radio" name="tamanho" value="43"> 43</label>
+        </div>
     </div>
 
     <!-- Quantidade -->
@@ -820,6 +834,7 @@ try {
         <input type="number" id="quantity" name="quantity" value="1" min="1" max="<?php echo $produto['estoque']; ?>">
     </div>
 
+    <!-- Botão Comprar -->
     <button type="button" class="btn-comprar" id="btn-comprar">Comprar</button>
 </form>
                         <?php if ($exibir_calculador_frete): ?>
