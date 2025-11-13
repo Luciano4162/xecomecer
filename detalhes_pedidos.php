@@ -568,6 +568,44 @@ if (!empty($flash_message)) {
                 margin-left: -32px;
             }
         }
+        <style>
+/* --- Botões de tamanhos (roupa e calçado) --- */
+.tamanhos-opcoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0;
+}
+
+.tamanhos-opcoes label {
+    border: 1px solid #ccc;
+    padding: 10px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    user-select: none;
+    font-weight: bold;
+    background-color: #fff;
+    transition: all 0.2s ease;
+}
+
+.tamanhos-opcoes label:hover {
+    background-color: var(--cor-acento-fundo-hover);
+    border-color: var(--green-accent);
+    color: var(--green-accent);
+}
+
+.tamanhos-opcoes input[type="radio"] {
+    display: none;
+}
+
+.tamanhos-opcoes label:has(input[type="radio"]:checked) {
+    background-color: var(--green-accent);
+    color: #fff;
+    border-color: var(--green-accent);
+}
+</style>
+</head>
+<body class="checkout-page">
     </style>
 </head>
 <body class="checkout-page">

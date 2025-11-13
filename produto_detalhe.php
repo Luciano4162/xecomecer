@@ -45,7 +45,31 @@ try {
     ");
     $stmt_prod->execute(['id' => $produto_id]);
     $produto = $stmt_prod->fetch(PDO::FETCH_ASSOC);
+$stmt_prod = $pdo->prepare("
+    SELECT p.*, m.nome AS marca_nome
+    FROM produtos p
+    LEFT JOIN marcas m ON p.marca_id = m.id
+    WHERE p.id = :id AND p.ativo = true
+");
+$stmt_prod->execute(['id' => $produto_id]);
+$produto = $stmt_prod->fetch(PDO::FETCH_ASSOC);
 
+// --- Buscar tamanhos do produto ---
+$stmt_tamanhos = $pdo->prepare("
+    SELECT tamanho 
+    FROM produto_tamanhos 
+    WHERE produto_id = :produto_id
+    ORDER BY tamanho
+");
+$stmt_tamanhos->execute([':produto_id' => $produto['id']]);
+$tamanhos = $stmt_tamanhos->fetchAll(PDO::FETCH_COLUMN);
+
+if (!$produto) {
+    $errors['db'] = "Produto não encontrado ou indisponível.";
+    $page_alert_message = $errors['db'];
+} else {
+    // --- LÓGICA DE DISPONIBILIDADE ---
+    $is_disponivel = ($produto['ativo'] && $produto['estoque'] > 0);
     if (!$produto) {
           $errors['db'] = "Produto não encontrado ou indisponível.";
           $page_alert_message = $errors['db'];
@@ -766,14 +790,42 @@ try {
                         <p class="price">R$ <?php echo number_format($produto['preco'], 2, ',', '.'); ?></p>
 
                         <form id="add-to-cart-form" onsubmit="return false;">
-                            <input type="hidden" id="produto-id" value="<?php echo $produto_id; ?>">
-                            <div class="quantity-selector">
-                                <label for="quantity">Quantidade:</label>
-                                <input type="number" id="quantity" name="quantity" value="1" min="1" max="<?php echo $produto['estoque']; ?>">
-                            </div>
-                            <button type="button" class="btn-comprar" id="btn-comprar">Comprar</button>
-                        </form>
+    <input type="hidden" id="produto-id" value="<?php echo $produto_id; ?>">
 
+    <!-- Tamanhos de Roupa -->
+    <div class="tamanho-selector">
+        <label>Selecione o tamanho de roupa:</label>
+        <div class="tamanhos-opcoes">
+            <label><input type="radio" name="tamanho" value="P"> P</label>
+            <label><input type="radio" name="tamanho" value="M"> M</label>
+            <label><input type="radio" name="tamanho" value="G"> G</label>
+            <label><input type="radio" name="tamanho" value="GG"> GG</label>
+        </div>
+    </div>
+
+    <!-- Tamanhos de Calçado -->
+    <div class="tamanho-selector">
+        <label>Selecione o tamanho do calçado:</label>
+        <div class="tamanhos-opcoes">
+            <label><input type="radio" name="tamanho" value="37"> 37</label>
+            <label><input type="radio" name="tamanho" value="38"> 38</label>
+            <label><input type="radio" name="tamanho" value="39"> 39</label>
+            <label><input type="radio" name="tamanho" value="40"> 40</label>
+            <label><input type="radio" name="tamanho" value="41"> 41</label>
+            <label><input type="radio" name="tamanho" value="42"> 42</label>
+            <label><input type="radio" name="tamanho" value="43"> 43</label>
+        </div>
+    </div>
+
+    <!-- Quantidade -->
+    <div class="quantity-selector">
+        <label for="quantity">Quantidade:</label>
+        <input type="number" id="quantity" name="quantity" value="1" min="1" max="<?php echo $produto['estoque']; ?>">
+    </div>
+
+    <!-- Botão Comprar -->
+    <button type="button" class="btn-comprar" id="btn-comprar">Comprar</button>
+</form>
                         <?php if ($exibir_calculador_frete): ?>
                             <div class="shipping-calculator">
                                 <label for="cep">Simulador de Frete</label>
@@ -1117,35 +1169,51 @@ try {
 
 
             // --- LISTENER DO BOTÃO COMPRAR (Específico desta página) ---
-            const btnComprar = document.getElementById('btn-comprar');
-            if (btnComprar) {
-                btnComprar.addEventListener('click', async () => {
-                    const produtoId = document.getElementById('produto-id').value;
-                    const quantidade = document.getElementById('quantity').value;
-                    btnComprar.textContent = 'Adicionando...';
-                    btnComprar.disabled = true;
-                    try {
-                        const addResponse = await fetch('cart_manager.php?action=add', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ produto_id: produtoId, quantidade: quantidade })
-                        });
-                        const addData = await addResponse.json();
-                        if (addData.status === 'success') {
-                            await updateCart();
-                            openCart();
-                        } else {
-                            alert(addData.message || 'Erro ao adicionar produto.');
-                        }
-                    } catch (error) {
-                        console.error('Erro no fetch:', error);
-                        alert('Erro ao se conectar. Tente novamente.');
-                    } finally {
-                        btnComprar.textContent = 'Comprar';
-                        btnComprar.disabled = false;
-                    }
-                });
+           const btnComprar = document.getElementById('btn-comprar');
+if (btnComprar) {
+    btnComprar.addEventListener('click', async () => {
+        const produtoId = document.getElementById('produto-id').value;
+        const quantidade = document.getElementById('quantity').value;
+
+        // --- NOVO: verificar se o tamanho foi selecionado ---
+        const tamanhoSelecionado = document.querySelector('input[name="tamanho"]:checked');
+        if (!tamanhoSelecionado) {
+            alert('Por favor, selecione um tamanho antes de comprar.');
+            return;
+        }
+
+        btnComprar.textContent = 'Adicionando...';
+        btnComprar.disabled = true;
+
+        try {
+            const addResponse = await fetch('cart_manager.php?action=add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    produto_id: produtoId, 
+                    quantidade: quantidade,
+                    tamanho: tamanhoSelecionado.value
+                })
+            });
+
+            const addData = await addResponse.json();
+
+            if (addData.status === 'success') {
+                await updateCart();
+                openCart();
+            } else {
+                alert(addData.message || 'Erro ao adicionar produto.');
             }
+
+        } catch (error) {
+            console.error('Erro no fetch:', error);
+            alert('Erro ao se conectar. Tente novamente.');
+        } finally {
+            btnComprar.textContent = 'Comprar';
+            btnComprar.disabled = false;
+        }
+    });
+}
 
             // --- NOVO: LISTENER DA LISTA DE DESEJOS ---
             const wishlistBtn = document.getElementById('wishlist-btn');

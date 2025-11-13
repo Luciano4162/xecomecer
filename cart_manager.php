@@ -16,21 +16,31 @@ $response = ['status' => 'error', 'message' => 'Ação inválida'];
 try {
     // Ação: Adicionar item ao carrinho
     if ($action == 'add' && $_SERVER['REQUEST_METHOD'] == 'POST') {
-        $data = json_decode(file_get_contents('php://input'), true);
-        $produto_id = (int)($data['produto_id'] ?? 0);
-        $quantidade = (int)($data['quantidade'] ?? 1);
+    $data = json_decode(file_get_contents('php://input'), true);
+    $produto_id = (int)($data['produto_id'] ?? 0);
+    $quantidade = (int)($data['quantidade'] ?? 1);
+    $tamanho = trim($data['tamanho'] ?? '');
 
-        if ($produto_id > 0 && $quantidade > 0) {
-            if (isset($_SESSION['cart'][$produto_id])) {
-                $_SESSION['cart'][$produto_id] += $quantidade;
-            } else {
-                $_SESSION['cart'][$produto_id] = $quantidade;
-            }
-            $response = ['status' => 'success', 'message' => 'Produto adicionado!'];
+    if ($produto_id > 0 && $quantidade > 0) {
+        // Identificador único do item (produto + tamanho)
+        $chaveItem = $tamanho ? "{$produto_id}_{$tamanho}" : (string)$produto_id;
+
+        // Se já existe esse produto com o mesmo tamanho no carrinho, soma
+        if (isset($_SESSION['cart'][$chaveItem])) {
+            $_SESSION['cart'][$chaveItem]['quantidade'] += $quantidade;
         } else {
-            $response['message'] = 'Dados do produto inválidos.';
+            $_SESSION['cart'][$chaveItem] = [
+                'produto_id' => $produto_id,
+                'quantidade' => $quantidade,
+                'tamanho' => $tamanho
+            ];
         }
+
+        $response = ['status' => 'success', 'message' => 'Produto adicionado ao carrinho!'];
+    } else {
+        $response['message'] = 'Dados do produto inválidos.';
     }
+}
 
     // AÇÃO: REMOVER UM ITEM
     if ($action == 'remove' && $_SERVER['REQUEST_METHOD'] == 'POST') {
