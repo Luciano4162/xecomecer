@@ -141,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_avaliacao'])) {
 // ==========================================================
 // LÓGICA DE BUSCA (GET)
 // ==========================================================
-try {
+
     // --- 2. BUSCAR DADOS DO PEDIDO E VALIDAR PROPRIEDADE ---
     $stmt = $pdo->prepare("SELECT * FROM pedidos WHERE id = :pedido_id AND usuario_id = :user_id");
     $stmt->execute(['pedido_id' => $pedido_id, 'user_id' => $user_id]);
