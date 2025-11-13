@@ -577,6 +577,10 @@ if (!empty($flash_message)) {
     margin: 8px 0;
 }
 
+.tamanhos-opcoes input[type="radio"] {
+    display: none;
+}
+
 .tamanhos-opcoes label {
     border: 1px solid #ccc;
     padding: 10px 16px;
@@ -588,17 +592,15 @@ if (!empty($flash_message)) {
     transition: all 0.2s ease;
 }
 
+/* Hover */
 .tamanhos-opcoes label:hover {
     background-color: var(--cor-acento-fundo-hover);
     border-color: var(--green-accent);
     color: var(--green-accent);
 }
 
-.tamanhos-opcoes input[type="radio"] {
-    display: none;
-}
-
-.tamanhos-opcoes label:has(input[type="radio"]:checked) {
+/* Quando selecionado */
+.tamanhos-opcoes input[type="radio"]:checked + label {
     background-color: var(--green-accent);
     color: #fff;
     border-color: var(--green-accent);
@@ -606,10 +608,7 @@ if (!empty($flash_message)) {
 </style>
 </head>
 <body class="checkout-page">
-    </style>
-</head>
-<body class="checkout-page">
-
+    
     <?php include 'templates/header.php'; ?>
 
     <main class="main-content container">
