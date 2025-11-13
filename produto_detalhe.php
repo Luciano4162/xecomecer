@@ -23,7 +23,7 @@ $errors = [];
 $page_alert_message = '';
 $exibir_calculador_frete = false; // Padrão
 
-[14:17, 13/11/2025] Advogado: // --- Identificar tipo de produto (roupa, calçado, etc.) ---
+ // --- Identificar tipo de produto (roupa, calçado, etc.) ---
 $tipo_produto = 'outro';
 
 if ($bc_categoria) {
@@ -35,7 +35,7 @@ if ($bc_categoria) {
         $tipo_produto = 'roupa';
     }
 }
-[14:22, 13/11/2025] Advogado: try {
+ try {
     // --- Query para verificar a lista de desejos ---
     if ($user_id) {
         $stmt_wishlist = $pdo->prepare("SELECT COUNT(*) FROM lista_desejos WHERE usuario_id = ? AND produto_id = ?");
