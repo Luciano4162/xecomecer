@@ -131,11 +131,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_avaliacao'])) {
         if ($avaliacao_valida) {
             $flash_message = "Avaliação enviada com sucesso!";
         } else {
-            $errors['auth'] = "Erro: Você não pode avaliar um produto que não";
-}
-     // fecha o if ($stmt_check->fetchColumn() > 0)
-     
-catch (PDOException $e) {
+            $errors['auth'] = "Erro: Você não pode avaliar um produto que não comprou.";
+        }
+    } // ✅ fecha o if ($stmt_check->fetchColumn() > 0)
+
+} catch (PDOException $e) {
     $errors['db_save'] = "Erro ao salvar avaliação: " . $e->getMessage();
 }
 // ==========================================================
