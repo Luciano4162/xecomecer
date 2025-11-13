@@ -134,9 +134,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_avaliacao'])) {
         $errors['auth'] = "Erro: Você não pode avaliar um produto que não comprou.";
     }
 } catch (PDOException $e) {
-    $errors['db_save'] = "Erro ao salvar avaliação: " . $e->getMessage();
-}
-    }
+    $errors['db_save'] = "Erro ao salvar avaliação: " . 
+    $e->getMessage();
 }
 
 
