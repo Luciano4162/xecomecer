@@ -133,10 +133,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_avaliacao'])) {
         } else {
             $errors['auth'] = "Erro: Você não pode avaliar um produto que não";
 }
-     } // fecha o if ($stmt_check->fetchColumn() > 0)
-     }
-
-
+     // fecha o if ($stmt_check->fetchColumn() > 0)
+     
 catch (PDOException $e) {
     $errors['db_save'] = "Erro ao salvar avaliação: " . $e->getMessage();
 }
