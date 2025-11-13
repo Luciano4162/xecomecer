@@ -45,34 +45,20 @@ try {
     ");
     $stmt_prod->execute(['id' => $produto_id]);
     $produto = $stmt_prod->fetch(PDO::FETCH_ASSOC);
-$stmt_prod = $pdo->prepare("
-    SELECT p.*, m.nome AS marca_nome
-    FROM produtos p
-    LEFT JOIN marcas m ON p.marca_id = m.id
-    WHERE p.id = :id AND p.ativo = true
-");
-$stmt_prod->execute(['id' => $produto_id]);
-$produto = $stmt_prod->fetch(PDO::FETCH_ASSOC);
 
-// --- Buscar tamanhos do produto ---
-$stmt_tamanhos = $pdo->prepare("
-    SELECT tamanho 
-    FROM produto_tamanhos 
-    WHERE produto_id = :produto_id
-    ORDER BY tamanho
-");
-$stmt_tamanhos->execute([':produto_id' => $produto['id']]);
-$tamanhos = $stmt_tamanhos->fetchAll(PDO::FETCH_COLUMN);
+    // --- Buscar tamanhos do produto ---
+    $stmt_tamanhos = $pdo->prepare("
+        SELECT tamanho 
+        FROM produto_tamanhos 
+        WHERE produto_id = :produto_id
+        ORDER BY tamanho
+    ");
+    $stmt_tamanhos->execute([':produto_id' => $produto['id']]);
+    $tamanhos = $stmt_tamanhos->fetchAll(PDO::FETCH_COLUMN);
 
-if (!$produto) {
-    $errors['db'] = "Produto não encontrado ou indisponível.";
-    $page_alert_message = $errors['db'];
-} else {
-    // --- LÓGICA DE DISPONIBILIDADE ---
-    $is_disponivel = ($produto['ativo'] && $produto['estoque'] > 0);
     if (!$produto) {
-          $errors['db'] = "Produto não encontrado ou indisponível.";
-          $page_alert_message = $errors['db'];
+        $errors['db'] = "Produto não encontrado ou indisponível.";
+        $page_alert_message = $errors['db'];
     } else {
         // --- LÓGICA DE DISPONIBILIDADE ---
         $is_disponivel = ($produto['ativo'] && $produto['estoque'] > 0);
@@ -92,9 +78,9 @@ if (!$produto) {
         $bc_categoria = $stmt_bc->fetch(PDO::FETCH_ASSOC);
 
         if ($bc_categoria && $bc_categoria['parent_id']) {
-             $stmt_parent = $pdo->prepare("SELECT id, nome FROM categorias WHERE id = :pid");
-             $stmt_parent->execute(['pid' => $bc_categoria['parent_id']]);
-             $bc_parent_categoria = $stmt_parent->fetch(PDO::FETCH_ASSOC);
+            $stmt_parent = $pdo->prepare("SELECT id, nome FROM categorias WHERE id = :pid");
+            $stmt_parent->execute(['pid' => $bc_categoria['parent_id']]);
+            $bc_parent_categoria = $stmt_parent->fetch(PDO::FETCH_ASSOC);
         }
 
         // --- BUSCAR MÍDIA DA GALERIA ---
@@ -110,16 +96,15 @@ if (!$produto) {
         if (!empty($galeria_midia)) {
             if ($galeria_midia[0]['tipo'] == 'imagem') {
                 $imagem_principal_galeria = $galeria_midia[0]['url'];
-            } else if ($galeria_midia[0]['tipo'] == 'video') {
+            } elseif ($galeria_midia[0]['tipo'] == 'video') {
                 $primeira_midia_e_video = true;
                 $video_principal_galeria = getVimeoEmbedUrl($galeria_midia[0]['url']);
             }
-        }
-        else if (!empty($produto['imagem_url'])) {
-             $galeria_midia[] = [
-                 'tipo' => 'imagem',
-                 'url' => $produto['imagem_url']
-             ];
+        } elseif (!empty($produto['imagem_url'])) {
+            $galeria_midia[] = [
+                'tipo' => 'imagem',
+                'url' => $produto['imagem_url']
+            ];
         }
 
         // --- BUSCAR PRODUTOS RELACIONADOS ---
@@ -140,8 +125,9 @@ if (!$produto) {
     }
 
 } catch (PDOException $e) {
-    $errors['db'] = "Erro ao buscar dados do produto: " . $e->getMessage();
-    $page_alert_message = $errors['db'];
+    // --- Captura de erros de banco ---
+    error_log("Erro no produto_detalhe: " . $e->getMessage());
+    $errors['db'] = "Erro ao carregar informações do produto.";
 }
 
 // Helper para converter URL Vimeo
@@ -792,29 +778,40 @@ try {
                         <form id="add-to-cart-form" onsubmit="return false;">
     <input type="hidden" id="produto-id" value="<?php echo $produto_id; ?>">
 
-    <!-- Tamanhos de Roupa -->
-    <div class="tamanho-selector">
-        <label>Selecione o tamanho de roupa:</label>
-        <div class="tamanhos-opcoes">
-            <label><input type="radio" name="tamanho" value="P"> P</label>
-            <label><input type="radio" name="tamanho" value="M"> M</label>
-            <label><input type="radio" name="tamanho" value="G"> G</label>
-            <label><input type="radio" name="tamanho" value="GG"> GG</label>
-        </div>
-    </div>
+    <!-- Botões de tamanho -->
+    <div class="tamanhos-opcoes">
+        <input type="radio" id="tamanhoP" name="tamanho" value="P">
+        <label for="tamanhoP">P</label>
 
-    <!-- Tamanhos de Calçado -->
-    <div class="tamanho-selector">
-        <label>Selecione o tamanho do calçado:</label>
-        <div class="tamanhos-opcoes">
-            <label><input type="radio" name="tamanho" value="37"> 37</label>
-            <label><input type="radio" name="tamanho" value="38"> 38</label>
-            <label><input type="radio" name="tamanho" value="39"> 39</label>
-            <label><input type="radio" name="tamanho" value="40"> 40</label>
-            <label><input type="radio" name="tamanho" value="41"> 41</label>
-            <label><input type="radio" name="tamanho" value="42"> 42</label>
-            <label><input type="radio" name="tamanho" value="43"> 43</label>
-        </div>
+        <input type="radio" id="tamanhoM" name="tamanho" value="M">
+        <label for="tamanhoM">M</label>
+
+        <input type="radio" id="tamanhoG" name="tamanho" value="G">
+        <label for="tamanhoG">G</label>
+
+        <input type="radio" id="tamanhoGG" name="tamanho" value="GG">
+        <label for="tamanhoGG">GG</label>
+
+        <input type="radio" id="tamanho37" name="tamanho" value="37">
+        <label for="tamanho37">37</label>
+
+        <input type="radio" id="tamanho38" name="tamanho" value="38">
+        <label for="tamanho38">38</label>
+
+        <input type="radio" id="tamanho39" name="tamanho" value="39">
+        <label for="tamanho39">39</label>
+
+        <input type="radio" id="tamanho40" name="tamanho" value="40">
+        <label for="tamanho40">40</label>
+
+        <input type="radio" id="tamanho41" name="tamanho" value="41">
+        <label for="tamanho41">41</label>
+
+        <input type="radio" id="tamanho42" name="tamanho" value="42">
+        <label for="tamanho42">42</label>
+
+        <input type="radio" id="tamanho43" name="tamanho" value="43">
+        <label for="tamanho43">43</label>
     </div>
 
     <!-- Quantidade -->
@@ -823,7 +820,6 @@ try {
         <input type="number" id="quantity" name="quantity" value="1" min="1" max="<?php echo $produto['estoque']; ?>">
     </div>
 
-    <!-- Botão Comprar -->
     <button type="button" class="btn-comprar" id="btn-comprar">Comprar</button>
 </form>
                         <?php if ($exibir_calculador_frete): ?>
