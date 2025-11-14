@@ -184,7 +184,7 @@ try {
         // Total final
         $total_valor = $subtotal;
 
-    } // <-- fecha o ELSE do checkout normal
+    } // <-- fecha o ELSE do checkout normall
 
 catch (PDOException $e) {
     $errors['db'] = "Erro ao carregar dados do checkout: " . $e->getMessage();
