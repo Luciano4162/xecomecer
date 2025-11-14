@@ -167,13 +167,10 @@ try {
 
             $_SESSION['cart'][$product_id] = $real_quantity;
 
-        } else {
-            unset($_SESSION['cart'][$product_id]);
-        }
-
+        
     } else {
         unset($_SESSION['cart'][$product_id]);
-    
+   }  
 $total_valor = $subtotal;
     
 
