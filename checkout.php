@@ -139,17 +139,20 @@ try {
             $stmt_cart->execute($cart_product_ids);
             $produtos_no_carrinho = $stmt_cart->fetchAll(PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
 
-            foreach ($_SESSION['cart'] as $product_id => $foreachquantity) {
-    // 🔹 Separa o ID numérico e o tamanho (caso exista)
+        foreach ($_SESSION['cart'] as $product_id => $foreachquantity) {
+
+    // Separa o ID numérico e o tamanho (caso exista)
     $parts = explode('_', $product_id);
     $produto_id_limpo = (int)$parts[0];
     $tamanho = $parts[1] ?? null;
 
     if (isset($produtos_no_carrinho[$produto_id_limpo]) && $produtos_no_carrinho[$produto_id_limpo]['ativo']) {
+
         $produto = $produtos_no_carrinho[$produto_id_limpo];
         $real_quantity = min($foreachquantity, $produto['estoque']);
 
         if ($real_quantity > 0) {
+
             $subtotal += $produto['preco'] * $real_quantity;
 
             $cart_items_details[] = [
@@ -159,17 +162,22 @@ try {
                 'quantidade' => $real_quantity,
                 'preco_unitario' => $produto['preco'],
                 'preco_total' => $produto['preco'] * $real_quantity,
-                'tamanho' => $tamanho // 🔹 mantém o tamanho
+                'tamanho' => $tamanho
             ];
 
             $_SESSION['cart'][$product_id] = $real_quantity;
+
         } else {
             unset($_SESSION['cart'][$product_id]);
         }
+
     } else {
         unset($_SESSION['cart'][$product_id]);
     }
-}
+
+} // ← ESTE } É OBRIGATÓRIO!
+
+
 
 $total_valor = $subtotal;
     }
