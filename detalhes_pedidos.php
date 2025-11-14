@@ -649,7 +649,7 @@ if (!empty($flash_message)) {
                     <?php if (!empty($itens_pedido)): ?>
                     <div class="item-list">
                         <?php
-                        foreach ($itens_pedido as $item):
+                         ($itens_pedido as $item):
                             $preco_total_item = $item['preco_total_calculado'];
                         ?>
                         <div class="item-row">
@@ -698,7 +698,7 @@ if (!empty($flash_message)) {
                     <?php endif; ?>
                 </div>
 
-                <?php if ($pedido_entregue): ?>
+                <?php if ($pedido_entregue): ?>foreach
                 <section id="review-container">
 
                     <div class="detail-card" id="review-form-card">
