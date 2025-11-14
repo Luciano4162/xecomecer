@@ -146,7 +146,10 @@ try {
             $placeholders = implode(',', array_fill(0, count($cart_product_ids), '?'));
             $stmt_cart = $pdo->prepare("SELECT id, nome, preco, imagem_url, estoque, ativo FROM produtos WHERE id IN ($placeholders)");
             $stmt_cart->execute($cart_product_ids);
-            $produtos_no_carrinho = $stmt_cart->fetchAll(PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
+            $produtos_no_carrinho = [];
+foreach ($stmt_cart->fetchAll(PDO::FETCH_ASSOC) as $row) {
+    $produtos_no_carrinho[$row['id']] = $row;
+}
 
             foreach ($_SESSION['cart'] as $product_id => $foreachquantity) {
 
