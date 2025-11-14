@@ -141,43 +141,57 @@ try {
 
         foreach ($_SESSION['cart'] as $product_id => $foreachquantity) {
 
-    // Separa o ID numérico e o tamanho (caso exista)
-    $parts = explode('_', $product_id);
-    $produto_id_limpo = (int)$parts[0];
-    $tamanho = $parts[1] ?? null;
+                // Separa o ID numérico e o tamanho (caso exista)
+                $parts = explode('_', $product_id);
+                $produto_id_limpo = (int)$parts[0];
+                $tamanho = $parts[1] ?? null;
 
-    if (isset($produtos_no_carrinho[$produto_id_limpo]) && $produtos_no_carrinho[$produto_id_limpo]['ativo']) {
+                if (isset($produtos_no_carrinho[$produto_id_limpo]) &&
+                    $produtos_no_carrinho[$produto_id_limpo]['ativo']) {
 
-        $produto = $produtos_no_carrinho[$produto_id_limpo];
-        $real_quantity = min($foreachquantity, $produto['estoque']);
+                    $produto = $produtos_no_carrinho[$produto_id_limpo];
+                    $real_quantity = min($foreachquantity, $produto['estoque']);
 
-        if ($real_quantity > 0) {
+                    if ($real_quantity > 0) {
 
-            $subtotal += $produto['preco'] * $real_quantity;
+                        $subtotal += $produto['preco'] * $real_quantity;
 
-            $cart_items_details[] = [
-                'id' => $produto_id_limpo,
-                'nome' => $produto['nome'],
-                'imagem_url' => $produto['imagem_url'],
-                'quantidade' => $real_quantity,
-                'preco_unitario' => $produto['preco'],
-                'preco_total' => $produto['preco'] * $real_quantity,
-                'tamanho' => $tamanho
-            ];
+                        $cart_items_details[] = [
+                            'id' => $produto_id_limpo,
+                            'nome' => $produto['nome'],
+                            'imagem_url' => $produto['imagem_url'],
+                            'quantidade' => $real_quantity,
+                            'preco_unitario' => $produto['preco'],
+                            'preco_total' => $produto['preco'] * $real_quantity,
+                            'tamanho' => $tamanho
+                        ];
 
-            $_SESSION['cart'][$product_id] = $real_quantity;
+                        $_SESSION['cart'][$product_id] = $real_quantity;
 
-        
-    } else {
-        unset($_SESSION['cart'][$product_id]);
-   }  
-$total_valor = $subtotal;
-    
+                    } else {
+                        // Quantidade inválida → remover
+                        unset($_SESSION['cart'][$product_id]);
+                    }
 
-} catch (PDOException $e) {
+                } else {
+                    // Produto não ativo ou não encontrado → remover
+                    unset($_SESSION['cart'][$product_id]);
+                }
+
+            } // <-- fecha foreach
+        } // <-- fecha if (!empty)
+
+        // Total final
+        $total_valor = $subtotal;
+
+    } // <-- fecha o ELSE do checkout normal
+} // <-- fecha o TRY
+
+catch (PDOException $e) {
     $errors['db'] = "Erro ao carregar dados do checkout: " . $e->getMessage();
     $page_alert_message = $e->getMessage();
-} catch (Exception $e) {
+}
+catch (Exception $e) {
     $errors['db'] = $e->getMessage();
     $page_alert_message = $e->getMessage();
 }
