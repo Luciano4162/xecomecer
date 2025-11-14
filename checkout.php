@@ -173,9 +173,7 @@ try {
 
     } else {
         unset($_SESSION['cart'][$product_id]);
-    }
-
-
+    
 $total_valor = $subtotal;
     
 
