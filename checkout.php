@@ -175,12 +175,9 @@ try {
         unset($_SESSION['cart'][$product_id]);
     }
 
-} // ← ESTE } É OBRIGATÓRIO!
-
-
 
 $total_valor = $subtotal;
-    }
+    
 
 } catch (PDOException $e) {
     $errors['db'] = "Erro ao carregar dados do checkout: " . $e->getMessage();
