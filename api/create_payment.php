@@ -115,7 +115,9 @@ foreach ($itens_para_inserir as $it) {
 $headers = [
     "Content-Type: application/json",
     "Accept: application/json",
-    "X-API-Key: SUA_CHAVE_AQUI"
+
+    // SUA CHAVE PIXUP JÁ CONFIGURADA AQUI ✔✔✔
+    "X-API-Key: Luciano4162_2806995125600330:43a7a3a0a95de2360778459bc6cb6891d2c4c3d538828d2fd32ac9c8969c4dd2"
 ];
 
 $payload = [
@@ -140,14 +142,14 @@ if (!$response || !isset($response['transactionId'])) {
 }
 
 // ---------------------------
-// 6. CORRIGE transactionId (caso venha como texto)
+// 6. CORRIGE transactionId (Postgres exige inteiro)
 // ---------------------------
 $txid_original = $response['transactionId'];
 
-// Remove tudo que não for número (Postgres NÃO aceita texto em campo integer)
+// Remove TUDO que não for número
 $txid_limpo = preg_replace('/\D/', '', $txid_original);
 if ($txid_limpo === '') {
-    $txid_limpo = null; // Evita SQLSTATE 22P02
+    $txid_limpo = null;
 }
 
 // PIX copia e cola
