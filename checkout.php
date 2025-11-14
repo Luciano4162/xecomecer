@@ -179,12 +179,14 @@ try {
                 }
 
             } // <-- fecha foreach
-        } // <-- fecha if (!empty)
+       } // <-- fecha if (!empty)
 
         // Total final
         $total_valor = $subtotal;
 
-    } // <-- fecha o ELSE do checkout normall
+    } // <-- fecha o ELSE do checkout normal
+
+} // <-- FECHA O TRY AQUI CERTINHO ✔✔✔
 
 catch (PDOException $e) {
     $errors['db'] = "Erro ao carregar dados do checkout: " . $e->getMessage();
