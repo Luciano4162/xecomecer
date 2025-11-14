@@ -13,11 +13,10 @@ if (!isset($_SESSION['user_logged_in']) || $_SESSION['user_logged_in'] !== true)
 
 require_once 'config/db.php'; // Garante $pdo para includes
 
-// **************************************************
+// ******************
 // CORREÇÃO CRÍTICA DE FUSO HORÁRIO
-// **************************************************
+// ******************
 date_default_timezone_set('America/Sao_Paulo');
-
 
 $user_id = $_SESSION['user_id'];
 $user_data = null;
@@ -133,63 +132,25 @@ try {
         $formas_pagamento = $stmt_pag->fetchAll(PDO::FETCH_ASSOC);
 
         // Extrai somente os IDs numéricos (remove o tamanho)
-$cart_product_ids = [];
-
-foreach (array_keys($_SESSION['cart'] ?? []) as $key) {
-    $parts = explode('_', $key);   // Ex: 10_M → [10, M]
-    $id_limpo = (int)$parts[0];
-    if ($id_limpo > 0) {
-        $cart_product_ids[] = $id_limpo;
-    }
-}
-
-if (!empty($cart_product_ids)) {
-
-    $placeholders = implode(',', array_fill(0, count($cart_product_ids), '?'));
-    $stmt_cart = $pdo->prepare("SELECT id, nome, preco, imagem_url, estoque, ativo FROM produtos WHERE id IN ($placeholders)");
-    $stmt_cart->execute($cart_product_ids);
-    $produtos_no_carrinho = $stmt_cart->fetchAll(PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
-
-    foreach ($_SESSION['cart'] as $product_id => $foreachquantity) {
-
-        // Separa ID e tamanho novamente
-        $parts = explode('_', $product_id);
-        $produto_id_limpo = (int)$parts[0];
-        $tamanho = $parts[1] ?? null;
-
-        if (isset($produtos_no_carrinho[$produto_id_limpo]) &&
-            $produtos_no_carrinho[$produto_id_limpo]['ativo']) {
-
-            $produto = $produtos_no_carrinho[$produto_id_limpo];
-            $real_quantity = min($foreachquantity, $produto['estoque']);
-
-            if ($real_quantity > 0) {
-
-                $subtotal += $produto['preco'] * $real_quantity;
-
-                $cart_items_details[] = [
-                    'id' => $produto_id_limpo,
-                    'nome' => $produto['nome'],
-                    'imagem_url' => $produto['imagem_url'],
-                    'quantidade' => $real_quantity,
-                    'preco_unitario' => $produto['preco'],
-                    'preco_total' => $produto['preco'] * $real_quantity,
-                    'tamanho' => $tamanho
-                ];
-
-                $_SESSION['cart'][$product_id] = $real_quantity;
-
-            } else {
-                unset($_SESSION['cart'][$product_id]);
+        $cart_product_ids = [];
+        foreach (array_keys($_SESSION['cart'] ?? []) as $key) {
+            $parts = explode('_', $key);   // Ex: 10_M → [10, M]
+            $id_limpo = (int)$parts[0];
+            if ($id_limpo > 0) {
+                $cart_product_ids[] = $id_limpo;
             }
-        } else {
-            unset($_SESSION['cart'][$product_id]);
         }
 
-    } // foreach
-} // if !empty
+        if (!empty($cart_product_ids)) {
 
-                // Separa o ID numérico e o tamanho (caso exista)
+            $placeholders = implode(',', array_fill(0, count($cart_product_ids), '?'));
+            $stmt_cart = $pdo->prepare("SELECT id, nome, preco, imagem_url, estoque, ativo FROM produtos WHERE id IN ($placeholders)");
+            $stmt_cart->execute($cart_product_ids);
+            $produtos_no_carrinho = $stmt_cart->fetchAll(PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
+
+            foreach ($_SESSION['cart'] as $product_id => $foreachquantity) {
+
+                // Separa ID e tamanho novamente
                 $parts = explode('_', $product_id);
                 $produto_id_limpo = (int)$parts[0];
                 $tamanho = $parts[1] ?? null;
@@ -217,24 +178,22 @@ if (!empty($cart_product_ids)) {
                         $_SESSION['cart'][$product_id] = $real_quantity;
 
                     } else {
-                        // Quantidade inválida → remover
                         unset($_SESSION['cart'][$product_id]);
                     }
 
                 } else {
-                    // Produto não ativo ou não encontrado → remover
                     unset($_SESSION['cart'][$product_id]);
                 }
 
-            } // <-- fecha foreach
-       } // <-- fecha if (!empty)
+            } // fecha foreach
+        } // fecha if !empty
 
         // Total final
         $total_valor = $subtotal;
 
-    } // <-- fecha o ELSE do checkout normal
+    } // fecha ELSE do checkout normal
 
-} // <-- FECHA O TRY AQUI CERTINHO ✔✔✔
+} // fecha TRY
 
 catch (PDOException $e) {
     $errors['db'] = "Erro ao carregar dados do checkout: " . $e->getMessage();
